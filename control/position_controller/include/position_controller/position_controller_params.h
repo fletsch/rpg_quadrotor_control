@@ -23,7 +23,9 @@ class PositionControllerParams {
         k_drag_x(0.0),
         k_drag_y(0.0),
         k_drag_z(0.0),
-        k_thrust_horz(0.0) {}
+        k_thrust_horz(0.0),
+        Q_(Eigen::Matrix<double, 12, 12>::Zero()),
+        changed_(false) {}
 
   ~PositionControllerParams() {}
 
@@ -127,6 +129,8 @@ class PositionControllerParams {
   double k_drag_z;  // z-direction rotor drag coefficient
   // thrust correction coefficient due to body horizontal velocity
   double k_thrust_horz;
+  Eigen::Matrix<double, 12, 12> Q_;
+  bool changed_;
 };
 
 }  // namespace position_controller

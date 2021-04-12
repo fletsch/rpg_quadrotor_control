@@ -825,9 +825,16 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::start(
     }
   }
 
+    // Set perception cost to zero. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.Q_(10, 10) = 0;
+  params.Q_(11, 11) = 0;
+  params.changed_ = true;
+
+
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   command = base_controller_.run(state_estimate, reference_trajectory_,
-                                 base_controller_params_);
+                                 params);
 
   return command;
 }
@@ -848,9 +855,15 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::hover(
     reference_state_.heading = current_heading;
   }
 
+  // Set perception cost to zero. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.Q_(10, 10) = 0;
+  params.Q_(11, 11) = 0;
+  params.changed_ = true;
+
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   const quadrotor_common::ControlCommand command = base_controller_.run(
-      state_estimate, reference_trajectory_, base_controller_params_);
+      state_estimate, reference_trajectory_, params);
 
   return command;
 }
@@ -876,9 +889,15 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::land(
       initial_land_position_.z() - start_land_velocity_ * timeInCurrentState();
   reference_state_.velocity.z() = -start_land_velocity_;
 
+  // Set perception cost to zero. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.Q_(10, 10) = 0;
+  params.Q_(11, 11) = 0;
+  params.changed_ = true;
+
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   command = base_controller_.run(state_estimate, reference_trajectory_,
-                                 base_controller_params_);
+                                 params);
 
   if (received_state_est_.coordinate_frame ==
           quadrotor_common::QuadStateEstimate::CoordinateFrame::WORLD ||
@@ -916,6 +935,13 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::land(
 template <typename Tcontroller, typename Tparams>
 quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::breakVelocity(
     const quadrotor_common::QuadStateEstimate& state_estimate) {
+
+  // Set perception cost to zero. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.Q_(10, 10) = 0;
+  params.Q_(11, 11) = 0;
+  params.changed_ = true;
+
   if (first_time_in_new_state_) {
     first_time_in_new_state_ = false;
     if (force_breaking_ ||
@@ -939,7 +965,7 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::breakVelocity(
 
       reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
       return base_controller_.run(state_estimate, reference_trajectory_,
-                                  base_controller_params_);
+                                  params);
     }
   }
 
@@ -954,7 +980,7 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::breakVelocity(
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   const quadrotor_common::ControlCommand command = base_controller_.run(
-      state_estimate, reference_trajectory_, base_controller_params_);
+      state_estimate, reference_trajectory_, params);
 
   return command;
 }
@@ -976,9 +1002,13 @@ AutoPilot<Tcontroller, Tparams>::waitForGoToPoseAction(
   // to go to TRAJECTORY_CONTROL mode in the time where a go to pose trajectory
   // is planned
 
+  // Set perception cost to nonzero default value. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.changed_ = true;
+
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   const quadrotor_common::ControlCommand command = base_controller_.run(
-      state_estimate, reference_trajectory_, base_controller_params_);
+      state_estimate, reference_trajectory_, params);
 
   return command;
 }
@@ -1069,6 +1099,10 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
     time_start_trajectory_execution_ = time_now;
   }
 
+  // Set perception cost to nonzero default value. This is hacky as it violates the templated form
+  Tparams params = base_controller_params_;
+  params.changed_ = true;
+
   if (trajectory_queue_.empty()) {
     ROS_ERROR(
         "[%s] Trajectory queue was unexpectedly emptied, going back to HOVER",
@@ -1079,7 +1113,7 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
 
     reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
     return base_controller_.run(state_estimate, reference_trajectory_,
-                                base_controller_params_);
+                                params);
   }
 
   if ((time_now - time_start_trajectory_execution_) >
@@ -1094,7 +1128,7 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
 
       reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
       return base_controller_.run(state_estimate, reference_trajectory_,
-                                  base_controller_params_);
+                                  params);
     } else {
       time_start_trajectory_execution_ +=
           trajectory_queue_.front().points.back().time_from_start;
@@ -1154,7 +1188,7 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
   *trajectories_left_in_queue = trajectory_queue_.size();
 
   const quadrotor_common::ControlCommand command = base_controller_.run(
-      state_estimate, reference_trajectory_, base_controller_params_);
+      state_estimate, reference_trajectory_, params);
 
   return command;
 }
