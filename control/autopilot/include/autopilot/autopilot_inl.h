@@ -60,6 +60,9 @@ AutoPilot<Tcontroller, Tparams>::AutoPilot(const ros::NodeHandle& nh,
       nh_.advertise<quadrotor_msgs::ControlCommand>("control_command", 1);
   autopilot_feedback_pub_ =
       nh_.advertise<quadrotor_msgs::AutopilotFeedback>("autopilot/feedback", 1);
+  reference_trajectory_pub_ =
+    nh_.advertise<quadrotor_msgs::Trajectory>("autopilot/reference_trajectory", 1);
+
 
   // Subscribers
   state_estimate_sub_ =
@@ -279,6 +282,9 @@ void AutoPilot<Tcontroller, Tparams>::goToPoseThread() {
 
         trajectory_generation_helper::heading::addConstantHeadingRate(
             start_state.heading, end_state.heading, &go_to_pose_traj);
+
+        quadrotor_msgs::Trajectory msg = go_to_pose_traj.toRosMessage();
+        reference_trajectory_pub_.publish(msg);
 
         if (go_to_pose_traj.trajectory_type !=
             quadrotor_common::Trajectory::TrajectoryType::UNDEFINED) {

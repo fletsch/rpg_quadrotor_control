@@ -117,6 +117,7 @@ class AutoPilot {
 
   ros::Publisher control_command_pub_;
   ros::Publisher autopilot_feedback_pub_;
+  ros::Publisher reference_trajectory_pub_;
 
   ros::Subscriber state_estimate_sub_;
   ros::Subscriber low_level_feedback_sub_;
