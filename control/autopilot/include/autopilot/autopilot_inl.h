@@ -76,6 +76,9 @@ AutoPilot<Tcontroller, Tparams>::AutoPilot(const ros::NodeHandle& nh,
   pose_command_sub_ = nh_.subscribe(
       "autopilot/pose_command", 1,
       &AutoPilot<Tcontroller, Tparams>::poseCommandCallback, this);
+  perception_sub_ = nh_.subscribe(
+      "autopilot/pose_command_with_perception", 1,
+      &AutoPilot<Tcontroller, Tparams>::perceptionCallback, this);
   velocity_command_sub_ = nh_.subscribe(
       "autopilot/velocity_command", 1,
       &AutoPilot<Tcontroller, Tparams>::velocityCommandCallback, this);
@@ -505,6 +508,40 @@ void AutoPilot<Tcontroller, Tparams>::poseCommandCallback(
   // Mutexes are unlocked because they go out of scope here
 }
 
+// TODO: There are better options than duplication to include perception button
+template <typename Tcontroller, typename Tparams>
+void AutoPilot<Tcontroller, Tparams>::perceptionCallback(
+    const geometry_msgs::PoseStamped::ConstPtr& msg) {
+  if (destructor_invoked_) {
+    return;
+  }
+
+  // Set flag to enable perception cost and disable state transition to hover in the end
+  perception_enabled_ = true;
+
+  // We need to lock both the go to pose mutex and the main mutex here.
+  // The order of locking has to match the one in goToPoseThread() to prevent
+  // deadlocks. So the go to pose mutex has to be locked first.
+  std::lock_guard<std::mutex> go_to_pose_lock(go_to_pose_mutex_);
+  std::lock_guard<std::mutex> main_lock(main_mutex_);
+
+  // Idea: A trajectory is planned to the desired pose in a separate
+  // thread. Once the thread is done it pushes the computed trajectory into the
+  // trajectory queue and switches to TRAJECTORY_CONTROL mode
+  if (autopilot_state_ == States::HOVER) {
+    setAutoPilotState(States::GO_TO_POSE);
+    requested_go_to_pose_ = *msg;
+    received_go_to_pose_command_ = true;
+  } else {
+    ROS_WARN(
+        "[%s] Will not execute go to pose action since autopilot is "
+        "not in HOVER",
+        pnh_.getNamespace().c_str());
+  }
+
+  // Mutexes are unlocked because they go out of scope here
+}
+
 template <typename Tcontroller, typename Tparams>
 void AutoPilot<Tcontroller, Tparams>::velocityCommandCallback(
     const geometry_msgs::TwistStamped::ConstPtr& msg) {
@@ -831,10 +868,11 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::start(
     }
   }
 
-    // Set perception cost to zero. This is hacky as it violates the templated form
+  // Set perception cost to zero. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
   params.Q_(10, 10) = 0;
   params.Q_(11, 11) = 0;
+  params.Q_(12, 12) = 0;
   params.changed_ = true;
 
 
@@ -863,9 +901,13 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::hover(
 
   // Set perception cost to zero. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
-  params.Q_(10, 10) = 0;
-  params.Q_(11, 11) = 0;
   params.changed_ = true;
+  if (!perception_enabled_)
+  {
+    params.Q_(10, 10) = 0;
+    params.Q_(11, 11) = 0;
+    params.Q_(12, 12) = 0;
+  }
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   const quadrotor_common::ControlCommand command = base_controller_.run(
@@ -899,6 +941,7 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::land(
   Tparams params = base_controller_params_;
   params.Q_(10, 10) = 0;
   params.Q_(11, 11) = 0;
+  params.Q_(12, 12) = 0;
   params.changed_ = true;
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
@@ -946,6 +989,7 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::breakVelocity(
   Tparams params = base_controller_params_;
   params.Q_(10, 10) = 0;
   params.Q_(11, 11) = 0;
+  params.Q_(12, 12) = 0;
   params.changed_ = true;
 
   if (first_time_in_new_state_) {
@@ -1011,6 +1055,12 @@ AutoPilot<Tcontroller, Tparams>::waitForGoToPoseAction(
   // Set perception cost to nonzero default value. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
   params.changed_ = true;
+  if (!perception_enabled_)
+  {
+    params.Q_(10, 10) = 0;
+    params.Q_(11, 11) = 0;
+    params.Q_(12, 12) = 0;
+  }
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
   const quadrotor_common::ControlCommand command = base_controller_.run(
@@ -1108,6 +1158,12 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
   // Set perception cost to nonzero default value. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
   params.changed_ = true;
+  if (!perception_enabled_)
+  {
+    params.Q_(10, 10) = 0;
+    params.Q_(11, 11) = 0;
+    params.Q_(12, 12) = 0;
+  }
 
   if (trajectory_queue_.empty()) {
     ROS_ERROR(
@@ -1121,7 +1177,6 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
     return base_controller_.run(state_estimate, reference_trajectory_,
                                 params);
   }
-
   if ((time_now - time_start_trajectory_execution_) >
       trajectory_queue_.front().points.back().time_from_start) {
     if (trajectory_queue_.size() == 1) {

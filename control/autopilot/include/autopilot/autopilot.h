@@ -46,6 +46,7 @@ class AutoPilot {
       const quadrotor_msgs::LowLevelFeedback::ConstPtr& msg);
 
   void poseCommandCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+  void perceptionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void velocityCommandCallback(
       const geometry_msgs::TwistStamped::ConstPtr& msg);
   void referenceStateCallback(
@@ -122,6 +123,7 @@ class AutoPilot {
   ros::Subscriber state_estimate_sub_;
   ros::Subscriber low_level_feedback_sub_;
   ros::Subscriber pose_command_sub_;
+  ros::Subscriber perception_sub_;
   ros::Subscriber velocity_command_sub_;
   ros::Subscriber reference_state_sub_;
   ros::Subscriber trajectory_sub_;
@@ -162,6 +164,7 @@ class AutoPilot {
   States desired_state_after_breaking_;
   States state_before_emergency_landing_;
   bool force_breaking_;
+  bool perception_enabled_;
 
   // Go to pose variables
   std::thread go_to_pose_thread_;

@@ -839,6 +839,28 @@ QPushButton {
     <string>Frame ID:</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="button_perception">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>150</y>
+     <width>91</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="cursor">
+    <cursorShape>ArrowCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string>Perception</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
