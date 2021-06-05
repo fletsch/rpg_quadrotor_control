@@ -227,6 +227,12 @@ class AutoPilot {
   static constexpr int kGoToPosePolynomialOrderOfContinuity_ = 5;
   static constexpr double kGoToPoseNeglectThreshold_ = 0.05;
   static constexpr double kThrustHighThreshold_ = 0.5;
+
+  // Indices t set perception cost to zero. This is very hacky as it violates the templated form
+  int kTheta_ = 12;
+  int kRadius_ = 13;
+  int kDistance_ = 14;
+
 };
 
 }  // namespace autopilot

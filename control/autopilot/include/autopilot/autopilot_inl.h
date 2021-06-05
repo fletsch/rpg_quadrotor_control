@@ -870,9 +870,9 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::start(
 
   // Set perception cost to zero. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
-  params.Q_(10, 10) = 0;
-  params.Q_(11, 11) = 0;
-  params.Q_(12, 12) = 0;
+  params.Q_(kTheta_, kTheta_) = 0;
+  params.Q_(kRadius_, kRadius_) = 0;
+  params.Q_(kDistance_, kDistance_) = 0;
   params.changed_ = true;
 
 
@@ -904,9 +904,9 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::hover(
   params.changed_ = true;
   if (!perception_enabled_)
   {
-    params.Q_(10, 10) = 0;
-    params.Q_(11, 11) = 0;
-    params.Q_(12, 12) = 0;
+    params.Q_(kTheta_, kTheta_) = 0;
+    params.Q_(kRadius_, kRadius_) = 0;
+    params.Q_(kDistance_, kDistance_) = 0;
   }
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
@@ -939,9 +939,9 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::land(
 
   // Set perception cost to zero. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
-  params.Q_(10, 10) = 0;
-  params.Q_(11, 11) = 0;
-  params.Q_(12, 12) = 0;
+  params.Q_(kTheta_, kTheta_) = 0;
+  params.Q_(kRadius_, kRadius_) = 0;
+  params.Q_(kDistance_, kDistance_) = 0;
   params.changed_ = true;
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
@@ -987,9 +987,9 @@ quadrotor_common::ControlCommand AutoPilot<Tcontroller, Tparams>::breakVelocity(
 
   // Set perception cost to zero. This is hacky as it violates the templated form
   Tparams params = base_controller_params_;
-  params.Q_(10, 10) = 0;
-  params.Q_(11, 11) = 0;
-  params.Q_(12, 12) = 0;
+  params.Q_(kTheta_, kTheta_) = 0;
+  params.Q_(kRadius_, kRadius_) = 0;
+  params.Q_(kDistance_, kDistance_) = 0;
   params.changed_ = true;
 
   if (first_time_in_new_state_) {
@@ -1057,9 +1057,9 @@ AutoPilot<Tcontroller, Tparams>::waitForGoToPoseAction(
   params.changed_ = true;
   if (!perception_enabled_)
   {
-    params.Q_(10, 10) = 0;
-    params.Q_(11, 11) = 0;
-    params.Q_(12, 12) = 0;
+    params.Q_(kTheta_, kTheta_) = 0;
+    params.Q_(kRadius_, kRadius_) = 0;
+    params.Q_(kDistance_, kDistance_) = 0;
   }
 
   reference_trajectory_ = quadrotor_common::Trajectory(reference_state_);
@@ -1160,9 +1160,9 @@ AutoPilot<Tcontroller, Tparams>::executeTrajectory(
   params.changed_ = true;
   if (!perception_enabled_)
   {
-    params.Q_(10, 10) = 0;
-    params.Q_(11, 11) = 0;
-    params.Q_(12, 12) = 0;
+    params.Q_(kTheta_, kTheta_) = 0;
+    params.Q_(kRadius_, kRadius_) = 0;
+    params.Q_(kDistance_, kDistance_) = 0;
   }
 
   if (trajectory_queue_.empty()) {
