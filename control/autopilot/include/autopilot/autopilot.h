@@ -47,6 +47,7 @@ class AutoPilot {
 
   void poseCommandCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void perceptionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+  void disablePerceptionCallback(const std_msgs::Empty::ConstPtr& msg);
   void velocityCommandCallback(
       const geometry_msgs::TwistStamped::ConstPtr& msg);
   void referenceStateCallback(
@@ -124,6 +125,7 @@ class AutoPilot {
   ros::Subscriber low_level_feedback_sub_;
   ros::Subscriber pose_command_sub_;
   ros::Subscriber perception_sub_;
+  ros::Subscriber disable_perception_sub_;
   ros::Subscriber velocity_command_sub_;
   ros::Subscriber reference_state_sub_;
   ros::Subscriber trajectory_sub_;

@@ -38,6 +38,7 @@ class AutopilotWidget(QWidget):
         self._force_hover_pub = None
         self._go_to_pose_pub = None
         self._perception_pub = None
+        self._disable_perception_pub = None
 
         self._autopilot_feedback_sub = None
         self._autopilot_feedback = quadrotor_msgs.AutopilotFeedback()
@@ -78,6 +79,9 @@ class AutopilotWidget(QWidget):
         self._perception_pub = rospy.Publisher(
             quad_namespace+'/autopilot/pose_command_with_perception', geometry_msgs.PoseStamped,
             queue_size=1)
+        self._disable_perception_pub = rospy.Publisher(
+            quad_namespace+'/autopilot/disable_perception', std_msgs.Empty,
+            queue_size=1)
 
         self._autopilot_feedback_sub = rospy.Subscriber(
             quad_namespace+'/autopilot/feedback',
@@ -90,6 +94,7 @@ class AutopilotWidget(QWidget):
         self.button_force_hover.setEnabled(True)
         self.button_go_to_pose.setEnabled(False)
         self.button_perception.setEnabled(False)
+        self.button_disable_perception.setEnabled(False)
 
 
 
@@ -110,6 +115,7 @@ class AutopilotWidget(QWidget):
         self.disconnect_pub_sub(self._force_hover_pub)
         self.disconnect_pub_sub(self._go_to_pose_pub)
         self.disconnect_pub_sub(self._perception_pub)
+        self.disconnect_pub_sub(self._disable_perception_pub)
 
         self.button_arm_bridge.setEnabled(False)
         self.button_start.setEnabled(False)
@@ -118,6 +124,7 @@ class AutopilotWidget(QWidget):
         self.button_force_hover.setEnabled(False)
         self.button_go_to_pose.setEnabled(False)
         self.button_perception.setEnabled(False)
+        self.button_disable_perception.setEnabled(False)
 
         self._connected = False
 
@@ -204,6 +211,7 @@ class AutopilotWidget(QWidget):
 
                 self.button_go_to_pose.setEnabled(True)
                 self.button_perception.setEnabled(True)
+                self.button_disable_perception.setEnabled(True)
                 self.go_to_pose_x.setEnabled(True)
                 self.go_to_pose_y.setEnabled(True)
                 self.go_to_pose_z.setEnabled(True)
@@ -213,6 +221,7 @@ class AutopilotWidget(QWidget):
 
                 self.button_go_to_pose.setDisabled(True)
                 self.button_perception.setDisabled(True)
+                self.button_disable_perception.setDisabled(True)
                 self.go_to_pose_x.setDisabled(True)
                 self.go_to_pose_y.setDisabled(True)
                 self.go_to_pose_z.setDisabled(True)
@@ -323,6 +332,11 @@ class AutopilotWidget(QWidget):
             self._perception_pub.publish(go_to_pose_msg)
         except:
             rospy.logwarn("Could not read and send go to pose message!")
+
+    @Slot(bool)
+    def on_button_disable_perception_clicked(self):
+        disable_perception_msg = std_msgs.Empty()
+        self._disable_perception_pub.publish(disable_perception_msg)
 
     def autopilot_feedback_available(self):
         if (rospy.Time.now() - self._autopilot_feedback_stamp).to_sec() <= 1.0:

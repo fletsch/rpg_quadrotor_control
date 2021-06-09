@@ -79,6 +79,9 @@ AutoPilot<Tcontroller, Tparams>::AutoPilot(const ros::NodeHandle& nh,
   perception_sub_ = nh_.subscribe(
       "autopilot/pose_command_with_perception", 1,
       &AutoPilot<Tcontroller, Tparams>::perceptionCallback, this);
+  disable_perception_sub_ = nh_.subscribe(
+      "autopilot/disable_perception", 1,
+      &AutoPilot<Tcontroller, Tparams>::disablePerceptionCallback, this);
   velocity_command_sub_ = nh_.subscribe(
       "autopilot/velocity_command", 1,
       &AutoPilot<Tcontroller, Tparams>::velocityCommandCallback, this);
@@ -540,6 +543,14 @@ void AutoPilot<Tcontroller, Tparams>::perceptionCallback(
   }
 
   // Mutexes are unlocked because they go out of scope here
+}
+
+template <typename Tcontroller, typename Tparams>
+void AutoPilot<Tcontroller, Tparams>::disablePerceptionCallback(
+    const std_msgs::Empty::ConstPtr& msg) {
+  // Turn of perception (set cost to zero)
+  perception_enabled_ = false;
+
 }
 
 template <typename Tcontroller, typename Tparams>
